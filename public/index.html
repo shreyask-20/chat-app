@@ -1,0 +1,62 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+            const sendButton = document.getElementById('send');
+            const messageInput = document.getElementById('message');
+            const messagesContainer = document.getElementById('messages');
+            const username = prompt("Enter your name:");
+            const room = prompt("Enter room name:");
+
+            socket.emit('join', { username, room });
+
+            sendButton.addEventListener('click', () => {
+                const message = messageInput.value;
+                if (message.trim()) {
+                    socket.emit('message', message);
+                    messageInput.value = '';
+                }
+            });
+
+            socket.on('loadMessages', (messages) => {
+                messages.forEach((data) => {
+                    displayMessage(data.sender, data.text);
+                });
+            });
+
+            socket.on('message', (data) => {
+                displayMessage(data.sender, data.text);
+            });
+
+            function displayMessage(sender, text) {
+                const msgElement = document.createElement('div');
+                msgElement.classList.add('message', sender === username ? 'user' : 'bot');
+                msgElement.innerHTML = `<strong>${sender}:</strong> ${text}`;
+                messagesContainer.appendChild(msgElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        });
+    </script>
+    <style>
+        body {
+            background: url('ai-pic.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div id="messages" class="messages-container"></div>
+        <div class="input-container">
+            <input type="text" id="message" placeholder="Type your message...">
+            <button id="send">Send</button>
+        </div>
+    </div>
+</body>
+</html>
